@@ -1,7 +1,5 @@
 def call(Map pipelineParams) {
-
     String  committer, envType, version, image
-    // String imageBaseName = 'allanweber/miro-widgets'
     String prd = 'prd'
     String master = 'master'
     pipeline {
@@ -42,17 +40,67 @@ def call(Map pipelineParams) {
                     step([$class: 'JUnitResultArchiver', testResults: 'target/surefire-reports/TEST-*.xml'])
                 }
             }
-            // stage('checkout git') {
-            //     steps {
-            //         git branch: pipelineParams.branch, credentialsId: 'GitCredentials', url: pipelineParams.scmUrl
-            //     }
-            // }
 
-            stage('build') {
+            stage('Sonar') {
+                when {
+                    not {
+                        branch master
+                    }
+                }
                 steps {
-                    sh 'mvn clean package -DskipTests=true'
+                    echo 'run sonarQube in future'
+                }
+            }
+
+            stage('Build Image') {
+                steps {
+                    script {
+                        sh "docker build --build-arg ENV_ARG=${envType} -t ${image} ."
+                    }
+                }
+            }
+
+            stage('Docker Login') {
+                steps {
+                    script {
+                        echo "${env.DOCKER_TOKEN} | docker login -u ${env.DOCKER_USER} --password-stdin"
+                    }
+                }
+            }
+
+            stage('Push Images') {
+                parallel {
+                    stage('Push Current Image') {
+                        steps {
+                            script {
+                                pushImage(image)
+                                removeImage(image)
+                            }
+                        }
+                    }
+                    stage ('Push Latest Image') {
+                        when {
+                            branch master
+                        }
+                        steps {
+                            script {
+                                String latestImage = "${imageBaseName}:latest"
+                                sh "docker tag ${image} ${latestImage}"
+                                pushImage(latestImage)
+                                removeImage(latestImage)
+                            }
+                        }
+                    }
                 }
             }
         }
     }
+}
+
+def pushImage(imageName) {
+    sh "docker push ${imageName}"
+}
+
+def removeImage(imageName) {
+    sh "docker rmi ${imageName}"
 }
