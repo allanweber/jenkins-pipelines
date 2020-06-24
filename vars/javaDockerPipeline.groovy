@@ -1,9 +1,14 @@
 def call(Map pipelineParams) {
-    String  committer, envType, version, image
-    String prd = 'prd'
-    String master = 'master'
     pipeline {
         agent any
+        environment {
+            String committer = ''
+            String envType = ''
+            String version = ''
+            String image = ''
+            String prd = 'prd'
+            String master = 'master'
+        }
         stages {
             stage ('Checking') {
                 steps {
@@ -15,8 +20,7 @@ def call(Map pipelineParams) {
                     echo 'committer -> ' + committer
 
                     script {
-                        version = sh(returnStdout: true,
-                        script: 'mvn help:evaluate -Dexpression=project.version -q -DforceStdout')
+                        version = sh(returnStdout: true, script: 'mvn help:evaluate -Dexpression=project.version -q -DforceStdout')
                     }
                     script {
                         if (env.BRANCH_NAME == master) {

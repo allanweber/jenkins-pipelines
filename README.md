@@ -14,6 +14,11 @@ java -jar ~/.jenkins/agent.jar -jnlpUrl http://localhost:9090/computer/agent1/sl
 docker run --restart unless-stopped --name mailhog -p 1025:1025 -p 8025:8025 -d mailhog/mailhog
 ```
 
+## Linter VS Code Extension
+
+* jenkins-pipeline-linter-connector
+* Add the jenkins utr in the configuration: http://localhost:9090/pipeline-model-converter/validate
+
 ## Functions
 
 ```groovy
@@ -114,8 +119,13 @@ def sched = job.scheduleBuild2(0)
 sched.get();
 ```
 
+## Manually Import Library From Git
 
-
+```groovy
+library identifier: 'jenkins-pipeline-demo-library@master',
+        retriever: modernSCM([$class: 'GitSCMSource',
+            remote: 'https://github.com/sixeyed/jenkins-pipeline-demo-library.git'])
+```
 
 ## Sample of nice pipeline
 
