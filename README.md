@@ -74,26 +74,48 @@ trivy -version
 
 `trivy image-name`
 
-## Kubernetes to Azure
+## Groovy
 
-Add plugins
+`brew install groovy`
 
-* Azure Container Service Plugin
-* Optionally
-  * Google Kubernetes Engine Plugin
-  * Kubernetes Continuous Deploy Plugin
+`groovyconsole`
 
-### Azure Credential
+### Sample Groovy Codes in Jenkins
 
-* Go to: Azure Active Directory > App registrations
-  * Get **Application (client) ID** and **Directory (tenant) ID**
+#### Run a Job
 
-* Got to: Subscriptions > "Subscription" > Access control (IAM)
-  * Add Role assignment
+```groovy
+import jenkins.model.Jenkins;
 
-<img src="img/3.png" width="50%" height="50%"/>
+def svr = Jenkins.instance;
 
-* Go to: Azure Active Directory > App registrations > "Jenkins" > Certificates & secrets > New Client secrets
+def job = svr.getJob("TEST Groovy");
+
+def sched = job.scheduleBuild2(0)
+
+sched.get();
+```
+
+#### Run with Parameter
+
+* Add a new string parameter (called target)
+
+```groovy
+import jenkins.model.Jenkins;
+
+def target = build.buildVariableResolver.resolve("target")
+
+def svr = Jenkins.instance;
+
+def job = svr.getJob(target);
+
+def sched = job.scheduleBuild2(0)
+
+sched.get();
+```
+
+
+
 
 ## Sample of nice pipeline
 
