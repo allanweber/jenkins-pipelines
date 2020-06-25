@@ -14,6 +14,7 @@ def call(Map config) {
             String version = ''
             String imageTag = ''
             String master = 'master'
+            def appImage = ''
         }
         stages {
             stage ('Checking') {
@@ -60,7 +61,7 @@ def call(Map config) {
                 steps {
                     script {
                         docker.withRegistry('', 'DockerHub') {
-                            def appImage = docker.build(config.imageBaseName)
+                            appImage = docker.build(config.imageBaseName)
                             appImage.push(imageTag)
                             appImage.push("latest")
                         }
