@@ -74,7 +74,7 @@ def call(Map config) {
                     stage('Push current tag') {
                         steps {
                             script {
-                                appImage.push(imageNameWithTag)
+                                appImage.push()
                             }
                         }
                     }
