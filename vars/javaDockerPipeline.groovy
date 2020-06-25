@@ -69,14 +69,14 @@ def call(Map config) {
 
             stage('Push Images') {
                 parallel {
-                    stage('Delete current tag') {
+                    stage('Push current tag') {
                         steps {
                             script {
                                 appImage.push(imageTag)
                             }
                         }
                     }
-                    stage ('Delete Latest') {
+                    stage ('Push Latest') {
                         when {
                             branch master
                         }
