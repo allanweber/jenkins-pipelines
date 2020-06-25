@@ -14,7 +14,7 @@ def call(Map config) {
             String version = ''
             String imageTag = ''
             String master = 'master'
-            String imageNameWithTag: ''
+            String imageNameWithTag = ''
             def appImage = ''
         }
         stages {
