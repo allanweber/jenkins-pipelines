@@ -12,7 +12,7 @@ def call(Map config) {
             String committer = ''
             String envType = ''
             String version = ''
-            String image = ''
+            String imageTag = ''
             String master = 'master'
         }
         stages {
@@ -30,11 +30,11 @@ def call(Map config) {
                     }
                     script {
                         envType = getEnvType()
-                        image = getImageName(config)
+                        imageTag = getImageTag(config)
                     }
                     echo "-> Building for ${envType} environment"
                     echo "-> Project version: ${version}"
-                    echo "-> Image name: ${image}"
+                    echo "-> Image tag: ${imageTag}"
                 }
             }
 
@@ -60,8 +60,9 @@ def call(Map config) {
                 steps {
                     script {
                         docker.withRegistry('', 'DockerHub') {
-                            def finalImage = docker.build(image)
-                            finalImage.push()
+                            def appImage = docker.build(config.imageBaseName)
+                            appImage.push(imageTag)
+                            appImage.push("latest")
                         }
                     }
                 }
@@ -112,19 +113,17 @@ def call(Map config) {
     }
 }
 
-String getImageName(config) {
-    String image = null
+String getImageTag(config) {
+    String tag = null
     String envType = getEnvType()
     if (env.BRANCH_NAME == master) {
-        image = "${config.imageBaseName}:${version}"
+        tag = "${version}"
     }
     else {
         String envName = config.addEnvName ? "-${envType}" : ''
-        image = "${config.imageBaseName}:${version}${envName}-${env.BUILD_ID}"
+        tag = "${version}${envName}-${env.BUILD_ID}"
     }
-    echo "ENV TYPE ${envType}"
-    echo "IMAGE NAME ${image}"
-    return image
+    return tag
 }
 
 String getEnvType() {
