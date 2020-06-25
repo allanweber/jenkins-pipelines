@@ -4,7 +4,7 @@
  -> imageBaseName: [String:Required] docker image name with owner. ex.: allanweber/java-app
  -> runSonar: [boolean:true] indication to run Sonar Lint, if the Branch is master will not run sonar
  */
-def call(Map config = [:]) {
+def call(Map config) {
     pipeline {
         agent any
         environment {
