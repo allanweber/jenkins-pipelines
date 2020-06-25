@@ -99,9 +99,6 @@ def call(Map config) {
                         }
                     }
                     stage ('Delete Latest') {
-                        when {
-                            branch master
-                        }
                         steps {
                             script {
                                 removeImage("${config.imageBaseName}:latest")
