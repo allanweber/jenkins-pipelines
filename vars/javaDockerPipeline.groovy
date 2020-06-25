@@ -54,7 +54,7 @@ def call(Map config = [runSonar:true]) {
             stage('Sonar') {
                 when {
                     expression {
-                        executeSonar(config)
+                        return executeSonar(config)
                     }
                 }
                 steps {
