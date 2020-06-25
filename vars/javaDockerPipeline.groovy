@@ -2,7 +2,8 @@
  Execute a common build pipeline for Java application, building sa docker image and publishing it
  @config is a map with some properties:
  -> imageBaseName: [String:Required] docker image name with owner. ex.: allanweber/java-app
- -> runSonar: [boolean:true] indication to run Sonar Lint, if the Branch is master will not run sonar
+ -> runSonar: [boolean:Required] indication to run Sonar Lint, if the Branch is master will not run sonar
+ -> addEnvName: [boolean:Required] indication that should add endName (prd, dev, etc...) to the image name for non Master/Production environment
  */
 def call(Map config) {
     pipeline {
@@ -12,7 +13,6 @@ def call(Map config) {
             String envType = ''
             String version = ''
             String image = ''
-            String prd = 'prd'
             String master = 'master'
         }
         stages {
@@ -29,18 +29,12 @@ def call(Map config) {
                         version = sh(returnStdout: true, script: 'mvn help:evaluate -Dexpression=project.version -q -DforceStdout')
                     }
                     script {
-                        if (env.BRANCH_NAME == master) {
-                            envType = prd
-                            image = "${config.imageBaseName}:${version}"
-                        }
-                        else {
-                            envType = 'dev'
-                            image = "${config.imageBaseName}:${version}-${envType}-${env.BUILD_ID}"
-                        }
+                        envType = getEnvType()
+                        image = getImageName(config)
                     }
-                    echo "Building for ${envType} environment"
-                    echo 'project version: ' + version
-                    echo 'image name: ' + image
+                    echo "-> Building for ${envType} environment"
+                    echo "-> Project version: ${version}"
+                    echo "-> Image name: ${image}"
                 }
             }
 
@@ -107,8 +101,30 @@ def call(Map config) {
     }
 }
 
+String getImageName(config) {
+    String image = null
+    String envType = getEnvType()
+    if (env.BRANCH_NAME == master) {
+        image = "${config.imageBaseName}:${version}"
+    }
+    else {
+        String envName = config.addEnvName ? "-${envType}" : ''
+        image = "${config.imageBaseName}:${version}${envName}-${env.BUILD_ID}"
+    }
+    echo "ENV TYPE ${envType}"
+    echo "IMAGE NAME ${image}"
+    return image
+}
+
+String getEnvType() {
+    if (env.BRANCH_NAME == master) {
+        return 'prd'
+    } else {
+        return 'dev'
+    }
+}
+
 boolean executeSonar(config) {
-    echo "Is to run Sonar ${config.runSonar} - ${config.runSonar && env.BRANCH_NAME != 'master'}"
     return config.runSonar && env.BRANCH_NAME != 'master';
 }
 
