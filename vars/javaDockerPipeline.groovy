@@ -1,4 +1,10 @@
-def call(Map pipelineParams) {
+/**
+ Execute a common build pipeline for Java application, building sa docker image and publishing it
+ @config is a map with some properties:
+ -> imageBaseName: [String:Required] docker image name with owner. ex.: allanweber/java-app
+ -> runSonar: [boolean:true] indication to run Sonar Lint, if the Branch is master will not run sonar
+ */
+def call(Map config = [runSonar:true]) {
     pipeline {
         agent any
         environment {
@@ -25,11 +31,11 @@ def call(Map pipelineParams) {
                     script {
                         if (env.BRANCH_NAME == master) {
                             envType = prd
-                            image = "${pipelineParams.imageBaseName}:${version}"
+                            image = "${config.imageBaseName}:${version}"
                         }
                         else {
                             envType = 'dev'
-                            image = "${pipelineParams.imageBaseName}:${version}-${envType}-${env.BUILD_ID}"
+                            image = "${config.imageBaseName}:${version}-${envType}-${env.BUILD_ID}"
                         }
                     }
                     echo "Building for ${envType} environment"
@@ -47,12 +53,12 @@ def call(Map pipelineParams) {
 
             stage('Sonar') {
                 when {
-                    not {
-                        branch master
+                    expression {
+                        executeSonar(config)
                     }
                 }
                 steps {
-                    echo 'run sonarQube in future'
+                    echo 'run sonarQube in the future'
                 }
             }
 
@@ -88,7 +94,7 @@ def call(Map pipelineParams) {
                         }
                         steps {
                             script {
-                                String latestImage = "${imageBaseName}:latest"
+                                String latestImage = "${config.imageBaseName}:latest"
                                 sh "docker tag ${image} ${latestImage}"
                                 pushImage(latestImage)
                                 removeImage(latestImage)
@@ -99,6 +105,10 @@ def call(Map pipelineParams) {
             }
         }
     }
+}
+
+boolean executeSonar(config) {
+    return config.runSonar && env.BRANCH_NAME != 'master';
 }
 
 def pushImage(imageName) {
