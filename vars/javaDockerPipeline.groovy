@@ -60,7 +60,7 @@ def call(Map config) {
                 steps {
                     script {
                         docker.withRegistry('', 'DockerHub') {
-                            def finalImage = docker.build(image, "--build-arg ENV_ARG=${envType}")
+                            def finalImage = docker.build(image)
                             finalImage.push()
                         }
                     }
