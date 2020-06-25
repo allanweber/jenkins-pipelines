@@ -108,6 +108,7 @@ def call(Map config = [runSonar:true]) {
 }
 
 boolean executeSonar(config) {
+    echo "Is to run Sonar ${config.runSonar} - ${config.runSonar && env.BRANCH_NAME != 'master'}"
     return config.runSonar && env.BRANCH_NAME != 'master';
 }
 
