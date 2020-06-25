@@ -14,6 +14,7 @@ def call(Map config) {
             String version = ''
             String imageTag = ''
             String master = 'master'
+            String imageNameWithTag: ''
             def appImage = ''
         }
         stages {
@@ -32,6 +33,7 @@ def call(Map config) {
                     script {
                         envType = getEnvType()
                         imageTag = getImageTag(config)
+                        imageNameWithTag = "${config.imageBaseName}:${imageTag}"
                     }
                     echo "-> Building for ${envType} environment"
                     echo "-> Project version: ${version}"
@@ -61,7 +63,7 @@ def call(Map config) {
                 steps {
                     script {
                         docker.withRegistry('', 'DockerHub') {
-                            appImage = docker.build(config.imageBaseName)
+                            appImage = docker.build(imageNameWithTag)
                         }
                     }
                 }
@@ -72,7 +74,7 @@ def call(Map config) {
                     stage('Push current tag') {
                         steps {
                             script {
-                                appImage.push(imageTag)
+                                appImage.push(imageNameWithTag)
                             }
                         }
                     }
@@ -94,7 +96,7 @@ def call(Map config) {
                     stage('Delete current tag') {
                         steps {
                             script {
-                                removeImage("${config.imageBaseName}:${imageTag}")
+                                removeImage(imageNameWithTag)
                             }
                         }
                     }
