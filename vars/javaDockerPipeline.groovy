@@ -57,13 +57,55 @@ def call(Map config) {
                 }
             }
 
-            stage('Build and Push Image') {
+            stage('Build Image') {
                 steps {
                     script {
                         docker.withRegistry('', 'DockerHub') {
                             appImage = docker.build(config.imageBaseName)
-                            appImage.push(imageTag)
-                            appImage.push("latest")
+                        }
+                    }
+                }
+            }
+
+            stage('Push Images') {
+                parallel {
+                    stage('Delete current tag') {
+                        steps {
+                            script {
+                                appImage.push(imageTag)
+                            }
+                        }
+                    }
+                    stage ('Delete Latest') {
+                        when {
+                            branch master
+                        }
+                        steps {
+                            script {
+                                appImage.push("latest")
+                            }
+                        }
+                    }
+                }
+            }
+
+            stage('Delete Images') {
+                parallel {
+                    stage('Delete current tag') {
+                        steps {
+                            script {
+                                removeImage("${config.imageBaseName}:${imageTag}")
+                            }
+                        }
+                    }
+                    stage ('Delete Latest') {
+                        when {
+                            branch master
+                        }
+                        steps {
+                            script {
+                                removeImage("${config.imageBaseName}:latest")
+                            }
                         }
                     }
                 }
@@ -139,10 +181,6 @@ boolean executeSonar(config) {
     return config.runSonar && env.BRANCH_NAME != 'master';
 }
 
-def pushImage(imageName) {
-    sh "docker push ${imageName}"
-}
-
 def removeImage(imageName) {
-    sh "docker rmi ${imageName}"
+    sh "docker rmi ${imageName} -f"
 }
